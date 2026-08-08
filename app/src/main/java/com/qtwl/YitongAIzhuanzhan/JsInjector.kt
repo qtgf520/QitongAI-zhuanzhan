@@ -34,6 +34,7 @@ private data class ReplySnapshot(
     val loading: Boolean,
     val inputFound: Boolean,
     val loginLikely: Boolean,
+    val authBlocked: Boolean,
     val url: String
 )
 
@@ -158,7 +159,20 @@ object JsInjector {
 
                             mainHandler.postDelayed({
                                 if (handle.isCancelled()) return@postDelayed
-                                evaluateJson(webView, buildSubmitScript(platform), handle) { send ->
+                                evaluateJson(webView, buildVerifyFilledMessageScript(platform, message), handle) { verified ->
+                                    if (verified?.optBoolean("success", false) != true) {
+                                        finish(
+                                            WebAutomationResult(
+                                                success = false,
+                                                stage = "fill",
+                                                detail = verified?.optString("error")
+                                                    ?.takeIf { it.isNotBlank() }
+                                                    ?: "The message input changed before it could be sent"
+                                            )
+                                        )
+                                        return@evaluateJson
+                                    }
+                                    evaluateJson(webView, buildSubmitScript(platform), handle) { send ->
                                     if (send?.optBoolean("success", false) != true) {
                                         finish(
                                             WebAutomationResult(
@@ -183,9 +197,7 @@ object JsInjector {
                                         lastText = "",
                                         stablePolls = 0
                                     ) { result ->
-                                        if (result.success && !finished.get()) {
-                                            finish(result)
-                                        }
+                                        if (!finished.get()) finish(result)
                                     }
 
                                     // 超时兜底
@@ -205,6 +217,7 @@ object JsInjector {
                                             )
                                         }
                                     }, remainingMs)
+                                    }
                                 }
                             }, platform.afterFillDelayMs)
                         }
@@ -299,6 +312,17 @@ object JsInjector {
                 (snapshot.count > baseline.count || normalisedReply != baseline.text.trim())
             val nextStable = if (hasNewReply && snapshot.text == lastText) stablePolls + 1 else 0
 
+            if (snapshot.authBlocked && !hasNewReply) {
+                callback(
+                    WebAutomationResult(
+                        success = false,
+                        stage = "auth",
+                        detail = "${platform.displayName} requires sign-in before a reply can be generated (${snapshot.url})"
+                    )
+                )
+                return@captureSnapshot
+            }
+
             val requiredStablePolls = if (snapshot.loading) {
                 REQUIRED_STABLE_POLLS_WHILE_LOADING
             } else {
@@ -363,6 +387,7 @@ object JsInjector {
                         loading = it.optBoolean("loading", false),
                         inputFound = it.optBoolean("inputFound", false),
                         loginLikely = it.optBoolean("loginLikely", false),
+                        authBlocked = it.optBoolean("authBlocked", false),
                         url = it.optString("url")
                     )
                 }
@@ -496,6 +521,26 @@ object JsInjector {
     input.focus();
     try{ input.click(); }catch(ignore){}
 
+    var isKimiEditor = !!(input.matches && input.matches('.chat-input-editor[contenteditable="true"],.chat-input-editor[role="textbox"]'));
+    if(isKimiEditor){
+      function normaliseKimiEditor(v){
+        return String(v||'').normalize('NFC').replace(/\u00a0/g,' ').replace(/[\u0000-\u001F\u007F\u00AD\u034F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g,'').replace(/\s+/g,' ').trim();
+      }
+      var kimiSelection=window.getSelection(), kimiRange=document.createRange();
+      kimiRange.selectNodeContents(input);
+      kimiSelection.removeAllRanges();
+      kimiSelection.addRange(kimiRange);
+      try{ document.execCommand('insertText',false,text); }catch(ignore){}
+      var kimiActual=normaliseKimiEditor(input.innerText || input.textContent || '');
+      var kimiExpected=normaliseKimiEditor(text);
+      if(kimiActual!==kimiExpected){
+        input.replaceChildren(document.createTextNode(text));
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        kimiActual=normaliseKimiEditor(input.innerText || input.textContent || '');
+      }
+      return JSON.stringify({success:true,method:'kimi-contenteditable',value:kimiActual});
+    }
+
     if(input.tagName==='TEXTAREA' || input.tagName==='INPUT'){
       var proto=input.tagName==='TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
       var descriptor=Object.getOwnPropertyDescriptor(proto,'value');
@@ -534,6 +579,42 @@ object JsInjector {
 """.trimIndent()
     }
 
+    private fun buildVerifyFilledMessageScript(platform: AiPlatformDefinition, message: String): String {
+        if (platform.id != "kimi") return """JSON.stringify({success:true})"""
+        val inputs = JSONArray(platform.inputSelectors).toString()
+        val text = JSONObject.quote(message)
+        return """
+(function(){
+  try{
+    var selectors=$inputs, expected=$text;
+    function normalise(v){
+      return String(v||'').normalize('NFC').replace(/\u00a0/g,' ')
+        .replace(/[\u0000-\u001F\u007F\u00AD\u034F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g,'')
+        .replace(/\s+/g,' ').trim();
+    }
+    function usable(el){
+      if(!el || el.disabled || el.getAttribute('aria-disabled')==='true') return false;
+      var style=getComputedStyle(el), rect=el.getBoundingClientRect();
+      return !el.hidden && style.display!=='none' && style.visibility!=='hidden' && (rect.width>0 || rect.height>0);
+    }
+    var input=null;
+    for(var i=0;i<selectors.length && !input;i++){
+      var candidate=null; try{candidate=document.querySelector(selectors[i]);}catch(ignore){}
+      if(usable(candidate)) input=candidate;
+    }
+    if(!input) return JSON.stringify({success:false,error:'Kimi message editor disappeared before Send'});
+    var actual=normalise(input.innerText || input.textContent || input.value || '');
+    var wanted=normalise(expected);
+    return JSON.stringify({
+      success: actual===wanted,
+      error: actual===wanted ? '' : 'Kimi editor content changed or duplicated before Send',
+      value: actual
+    });
+  }catch(e){return JSON.stringify({success:false,error:String(e)});}
+})()
+""".trimIndent()
+    }
+
     private fun buildSubmitScript(platform: AiPlatformDefinition): String {
         val inputs = JSONArray(platform.inputSelectors).toString()
         val buttons = JSONArray(platform.sendButtonSelectors).toString()
@@ -562,6 +643,16 @@ object JsInjector {
       return null;
     }
     var button=first(buttonSelectors);
+    if(!button){
+      var rs=roots();
+      for(var r=0;r<rs.length && !button;r++){
+        var candidates=[]; try{candidates=rs[r].querySelectorAll('button,[role="button"]');}catch(ignore){}
+        for(var c=0;c<candidates.length;c++){
+          var label=((candidates[c].innerText||candidates[c].textContent||'')+' '+(candidates[c].getAttribute('aria-label')||'')).trim();
+          if(usable(candidates[c]) && /^(send|发送)$/i.test(label)){button=candidates[c];break;}
+        }
+      }
+    }
     if(button){
       try{ button.focus(); }catch(ignore){}
       try{ button.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true})); }catch(ignore){}
@@ -654,12 +745,25 @@ object JsInjector {
       if(text && !seenText.has(text)){ seenText.add(text); messages.push(text); }
     }
     var body=(document.body && document.body.innerText || '').toLowerCase();
+    var authBlocked=false;
+    var authSelectors=['[role="dialog"]','[class*="login-modal" i]','[class*="signin-modal" i]','[class*="login-dialog" i]'];
+    for(var a=0;a<authSelectors.length && !authBlocked;a++){
+      var authNodes=[]; try{authNodes=document.querySelectorAll(authSelectors[a]);}catch(ignore){}
+      for(var ai=0;ai<authNodes.length;ai++){
+        if(!visible(authNodes[ai])) continue;
+        var authText=(authNodes[ai].innerText || authNodes[ai].textContent || '').toLowerCase();
+        if(/登录|登錄|sign in|log in|continue with google|phone number|手机号|手機號/.test(authText)){
+          authBlocked=true; break;
+        }
+      }
+    }
     return JSON.stringify({
       text: messages.length ? messages[messages.length-1] : '',
       count: messages.length,
       loading: isLoading,
       inputFound: inputFound,
       loginLikely: /登录|登入|sign in|log in|验证码|验证|verify your account/.test(body),
+      authBlocked: authBlocked,
       url: location.href
     });
   }catch(e){ return JSON.stringify({error:String(e),url:location.href}); }

@@ -1,5 +1,31 @@
 # 📋 更新日志
 
+## v1.0.3-4 (2026-08-08) — 真实站点烟雾测试 + Qwen/Kimi 适配
+
+### 🧪 测试
+- 新增 Robolectric 网关/平台回归测试：验证无 `charset` 的原始 UTF-8 JSON 请求，以及 5 个生产平台的 WebView 配置。
+- 新增可选真实站点 Android 烟雾测试（默认 CI 不执行网络请求），可逐站或一次测试豆包、元宝、Qwen/通义、DeepSeek、Kimi。
+- API 35 仿真器回归套件覆盖 Unicode、流式回复、旧回复/侧边栏干扰、Qwen 当前 DOM、Kimi 单次输入以及登录弹窗分类。
+
+### 🐛 修复
+- Qwen/通义生产站已迁移到 `www.qianwen.com`：更新主 URL、Host 列表和当前 `message-select-*` 回复容器选择器；真实消息/回复烟雾测试通过。
+- Kimi 更新为 `www.kimi.com`，适配当前 `.chat-input-editor` 富文本编辑器，保证消息只写入一次，并在 React 编辑器稳定后再次校验再发送。
+- Kimi 当前无类名 `Send` 按钮增加严格的可见文本回退；登录弹窗现在快速返回 `auth`，不再误报为回复超时。
+- 真实环境测试会明确区分站点/账号环境阻断：豆包地区限制、元宝/DeepSeek 登录门槛、Kimi 登录门槛不会被伪装为成功。
+
+---
+
+## v1.0.3-3 (2026-08-08) — UTF-8 网关修复
+
+### 🐛 修复
+- 修复 OpenAI 兼容客户端发送 `application/json` 但未显式携带 `charset` 时，中文请求被 NanoHTTPD 2.3.1 按 US-ASCII 解码为 `���` 的问题。
+- 网关在有 `Content-Length` 时直接读取原始请求字节并严格按 UTF-8 解码；异常 UTF-8 返回明确的 400 错误，不再把乱码继续发送到网页 AI。
+- 无 `Content-Length` 的回退路径会在 NanoHTTPD 解析前补充 `charset=UTF-8`。
+- 新增中文、Emoji、重音字符和西里尔字符的单元测试与真实 Android WebView 注入回归测试。
+
+---
+
+
 ## v1.0.2 (2026-08-05) — 正式版 🎉
 
 ### ✨ 新增
@@ -116,6 +142,6 @@
 
 ---
 
-> **当前版本：** v1.0.2 (versionCode=33)  
+> **当前版本：** v1.0.3-4 (versionCode=39)
 > **状态：** 正式版 🎉  
 > **发布日期：** 2026-08-05

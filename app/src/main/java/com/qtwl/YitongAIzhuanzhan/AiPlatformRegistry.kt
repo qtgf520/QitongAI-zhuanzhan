@@ -97,8 +97,8 @@ object AiPlatformRegistry {
         AiPlatformDefinition(
             id = "tongyi",
             displayName = "Qwen / 通义千问",
-            url = "https://tongyi.aliyun.com/qianwen/",
-            hosts = setOf("tongyi.aliyun.com", "qianwen.aliyun.com"),
+            url = "https://www.qianwen.com/",
+            hosts = setOf("www.qianwen.com", "qianwen.com", "tongyi.aliyun.com", "qianwen.aliyun.com"),
             inputSelectors = listOf(
                 "textarea",
                 "[contenteditable='true']",
@@ -113,6 +113,9 @@ object AiPlatformRegistry {
                 "button[type='submit']"
             ),
             assistantMessageSelectors = listOf(
+                "[class*='message-select-wrapper-answer']",
+                "[class*='message-select-content-inner']",
+                "[class*='message-select-content']",
                 "[data-role='assistant']",
                 "[data-message-author-role='assistant']",
                 ".qwen-markdown",
@@ -160,9 +163,11 @@ object AiPlatformRegistry {
         AiPlatformDefinition(
             id = "kimi",
             displayName = "Kimi",
-            url = "https://kimi.moonshot.cn/",
-            hosts = setOf("kimi.moonshot.cn", "moonshot.cn"),
+            url = "https://www.kimi.com/",
+            hosts = setOf("www.kimi.com", "kimi.com", "kimi.moonshot.cn", "moonshot.cn"),
             inputSelectors = listOf(
+                ".chat-input-editor[contenteditable='true']",
+                ".chat-input-editor[role='textbox']",
                 "textarea",
                 "[contenteditable='true']",
                 "[role='textbox']",
@@ -187,7 +192,8 @@ object AiPlatformRegistry {
                 "[class*='loading']",
                 "button[aria-label*='停止']",
                 "button[aria-label*='Stop']"
-            )
+            ),
+            afterFillDelayMs = 900L
         )
     )
 

@@ -81,7 +81,12 @@ class GatewayServer(
         }
 
         try {
-            val body = readBody(session)
+            val body = runCatching { readBody(session) }.getOrElse { error ->
+                return errorResponse(
+                    Response.Status.BAD_REQUEST,
+                    error.message ?: "request body must be valid UTF-8"
+                )
+            }
             val request = runCatching { JSONObject(body) }.getOrElse {
                 return errorResponse(Response.Status.BAD_REQUEST, "invalid JSON body")
             }
@@ -177,10 +182,34 @@ class GatewayServer(
         }
     }
 
-    private fun readBody(session: IHTTPSession): String {
+    internal fun readBody(session: IHTTPSession): String {
+        // NanoHTTPD 2.3.1 defaults a present Content-Type without an explicit
+        // charset to US-ASCII. OpenAI-compatible clients commonly send
+        // application/json without charset=UTF-8, which turns raw Chinese
+        // text into U+FFFD replacement characters before JSONObject sees it.
+        // Read the declared raw bytes ourselves and decode strict UTF-8.
+        val contentLength = session.headers["content-length"]
+            ?.trim()
+            ?.toLongOrNull()
+        if (contentLength != null) {
+            return Utf8RequestBody.readExact(session.inputStream, contentLength)
+        }
+
+        // Fallback for unusual requests without Content-Length. NanoHTTPD may
+        // already have decoded the body here, so never forward a body that has
+        // replacement characters: a clear 400 is safer than sending gibberish
+        // to the AI website.
+        val contentType = session.headers["content-type"].orEmpty()
+        if (!contentType.contains("charset=", ignoreCase = true)) {
+            session.headers["content-type"] = if (contentType.isBlank()) {
+                "application/json; charset=UTF-8"
+            } else {
+                "$contentType; charset=UTF-8"
+            }
+        }
         val files = HashMap<String, String>()
         session.parseBody(files)
-        return files["postData"].orEmpty()
+        return Utf8RequestBody.validateLegacyDecodedBody(files["postData"].orEmpty())
     }
 
     private fun completionResponse(modelId: String, reply: String): Response {
