@@ -170,6 +170,6 @@ pm install -r /data/local/tmp/app.apk
 
 ---
 
-> **当前版本：** v1.0.3-4 (versionCode=39)
+> **当前版本：** v1.0.3-5 (versionCode=40)
 > **发布日期：** 2026-08-05  
 > **状态：** 正式版 🎉

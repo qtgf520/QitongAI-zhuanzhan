@@ -34,14 +34,7 @@ class PipelineWebViewInstrumentedTest {
     @Test
     fun threeWebViewsCaptureAndForwardRepliesEndToEnd() {
         val fixtures = mapOf(
-            "doubao" to createFixture(
-                baseUrl = "https://www.doubao.com/chat/",
-                inputHtml = "<textarea data-testid='chat_input_input'></textarea>",
-                buttonHtml = "<button id='flow-end-msg-send'>Send</button>",
-                responseHtml = "<div data-testid='message_text_content' id='response'></div>",
-                loadingHtml = "<div class='loading-spinner' id='loading' style='display:none'>loading</div>",
-                prefix = "D:"
-            ),
+            "doubao" to createHashedDoubaoFixture(prefix = "D:"),
             "yuanbao" to createFixture(
                 baseUrl = "https://yuanbao.tencent.com/",
                 inputHtml = "<div data-slate-editor='true' contenteditable='true' id='editor'></div>",
@@ -371,6 +364,35 @@ class PipelineWebViewInstrumentedTest {
             </html>
         """.trimIndent()
         return createWebView(baseUrl, html)
+    }
+
+    private fun createHashedDoubaoFixture(prefix: String): WebView {
+        return createHtmlFixture(
+            baseUrl = "https://www.doubao.com/chat/",
+            bodyHtml = """
+                <textarea data-testid="chat_input_input" id="editor"></textarea>
+                <button id="flow-end-msg-send">Send</button>
+                <main id="thread"></main>
+            """.trimIndent(),
+            script = """
+                var input = document.getElementById('editor');
+                var button = document.getElementById('flow-end-msg-send');
+                var thread = document.getElementById('thread');
+                button.addEventListener('click', function(){
+                  var value = input.value || '';
+                  var user = document.createElement('section');
+                  user.className = 'db-turn-a91f3';
+                  user.innerHTML = '<div class="db-cell-0c5e"><span>' + value + '</span></div>';
+                  thread.appendChild(user);
+                  setTimeout(function(){
+                    var assistant = document.createElement('section');
+                    assistant.className = 'db-turn-f47ac';
+                    assistant.innerHTML = '<div class="db-cell-b135"><p>${prefix}' + value + '</p></div>';
+                    thread.appendChild(assistant);
+                  }, 300);
+                });
+            """.trimIndent()
+        )
     }
 
     private fun createFixture(
