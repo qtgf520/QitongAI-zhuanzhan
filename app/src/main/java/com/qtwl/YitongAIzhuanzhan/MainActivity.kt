@@ -23,39 +23,36 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appContext = applicationContext
-
         NotificationHelper.init(applicationContext)
-
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
                 var currentScreen by remember { mutableStateOf("browser") }
-
                 when (currentScreen) {
-                    "settings" -> {
-                        SettingsScreen(onBack = { currentScreen = "about" })
-                    }
-                    "bookmarks" -> {
-                        BookmarkEditScreen(onBack = { currentScreen = "about" })
-                    }
-                    "about" -> {
-                        AboutScreen(
-                            onBack = { currentScreen = "browser" },
-                            onLanguageChanged = { recreate() },
-                            onNavigateToSettings = { currentScreen = "settings" },
-                            onNavigateToBookmarks = { currentScreen = "bookmarks" },
-                            onNavigateToMcpBrowser = { currentScreen = "mcp_browser" }
-                        )
-                    }
-                    "mcp_browser" -> {
-                        McpBrowserScreen(onBack = { currentScreen = "about" })
-                    }
-                    else -> {
-                        BrowserScreen(onNavigateToAbout = { currentScreen = "about" })
-                    }
+                    "settings" -> SettingsScreen(onBack = { currentScreen = "about" })
+                    "bookmarks" -> BookmarkEditScreen(onBack = { currentScreen = "about" })
+                    "about" -> AboutScreen(
+                        onBack = { currentScreen = "browser" },
+                        onLanguageChanged = { recreate() },
+                        onNavigateToSettings = { currentScreen = "settings" },
+                        onNavigateToBookmarks = { currentScreen = "bookmarks" },
+                        onNavigateToMcpBrowser = { currentScreen = "mcp_browser" }
+                    )
+                    "mcp_browser" -> McpBrowserScreen(onBack = { currentScreen = "about" })
+                    else -> BrowserScreen(onNavigateToAbout = { currentScreen = "about" })
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AppHider.hide(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AppHider.show(this)
     }
 
     override fun attachBaseContext(newBase: Context) {

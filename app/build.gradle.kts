@@ -12,8 +12,8 @@ android {
         applicationId = "com.qtwl.YitongAIzhuanzhan"
         minSdk = 24
         targetSdk = 35
-        versionCode = 39
-        versionName = "1.0.3-4"
+        versionCode = 40
+versionName = "1.0.3-5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -24,13 +24,25 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../qitong.jks")
+            storePassword = "qitongwangluo"
+            keyAlias = "qitong"
+            keyPassword = "qitongwangluo"
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

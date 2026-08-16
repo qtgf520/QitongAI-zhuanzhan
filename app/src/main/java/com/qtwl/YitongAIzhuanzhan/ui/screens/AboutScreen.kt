@@ -158,9 +158,10 @@ fun AboutScreen(
                         Text("任务视图隐藏", style = MaterialTheme.typography.bodyLarge, color = if (isDark) AppleLabelDark else AppleLabel)
                         Text("AI 任务运行时隐藏在最近任务", style = MaterialTheme.typography.bodySmall, color = if (isDark) AppleSecondaryLabelDark else AppleSecondaryLabel)
                     }
+                    var appHiderEnabled by remember { mutableStateOf(AppHider.isEnabled(context)) }
                     Switch(
-                        checked = AppHider.isEnabled(context),
-                        onCheckedChange = { AppHider.setEnabled(context, it) },
+                        checked = appHiderEnabled,
+                        onCheckedChange = { AppHider.setEnabled(context, it); appHiderEnabled = it },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = AppleBlue,
@@ -215,7 +216,7 @@ fun AboutScreen(
             GlassCard(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), elevation = 2.dp) {
                 LinkItem(Icons.Outlined.Chat, stringResource(R.string.qq_group), "1007488535", {
                     try {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://qun.qq.com/universal-share/share?ac=1&authKey=P6t4V0S6cBsy920xxtTreRUIl%2Fko0SNlgYcpPQEXfrCz2Vg01NkzELCORtbHHtuJ&busi_data=eyJncm91cENvZGUiOiIxMDA3NDg4NTM1IiwidG9rZW4iOiJaWUlBKzFPSUozYWhVSU1FRzJmYTN3RmZYcHVlU1pSSnp4MUg3NjhPUUVkemJJSWJOTENja3I4ZFNYU01BTE9MIiwidWluIjoiMzA4OTY5MTQzNiJ9&data=xwEXQKNx2cIbFUY0dByPQV1l7BxvDJWiwEJfDW-YNTFRpOGChmWJrh_4tbRSuHjz01Hn4_ycXC2aa-uY3fKWqQ&svctype=4&tempid=h5_group_info")))
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://qm.qq.com/q/4v8sVX4cKc")))
                     } catch (e: Exception) {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText(qqGroupClipLabel, "1007488535"))

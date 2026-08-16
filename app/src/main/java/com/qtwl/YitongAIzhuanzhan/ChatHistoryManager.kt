@@ -1,11 +1,13 @@
 package com.qtwl.YitongAIzhuanzhan
 
 import android.content.Context
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
 object ChatHistoryManager {
+    private const val TAG = "ChatHistory"
     private const val FILE_NAME = "chat_history.json"
     private const val MAX_RECORDS = 100
 
@@ -56,7 +58,7 @@ object ChatHistoryManager {
             }
             file.writeText(json.toString())
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "saveMessage failed", e)
         }
     }
 
@@ -74,7 +76,7 @@ object ChatHistoryManager {
             }
             file.writeText(json.toString())
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "deleteMessage failed", e)
         }
     }
 
@@ -82,7 +84,7 @@ object ChatHistoryManager {
         try {
             File(context.filesDir, FILE_NAME).delete()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "deleteAll failed", e)
         }
     }
 }
