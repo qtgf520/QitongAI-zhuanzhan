@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,6 +50,7 @@ fun SettingsScreen(
     var showApiKey by remember { mutableStateOf(false) }
     var customUa by remember { mutableStateOf(GatewayPrefs.getUserAgent(context)) }
     var textZoom by remember { mutableIntStateOf(GatewayPrefs.getTextZoom(context)) }
+    val gatewayRunning by remember { derivedStateOf { GatewayService.isRunning } }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -63,7 +64,7 @@ fun SettingsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -358,8 +359,8 @@ fun SettingsScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     StatusRow(
                         label = stringResource(R.string.running_status),
-                        value = if (gatewayEnabled) stringResource(R.string.gateway_running) else stringResource(R.string.gateway_stopped),
-                        valueColor = if (gatewayEnabled) AppleGreen else (if (isDark) AppleGray2 else AppleGray),
+                        value = if (gatewayRunning) stringResource(R.string.gateway_running) else stringResource(R.string.gateway_stopped),
+                        valueColor = if (gatewayRunning) AppleGreen else (if (isDark) AppleGray2 else AppleGray),
                         isDark = isDark
                     )
                     Spacer(Modifier.height(8.dp))

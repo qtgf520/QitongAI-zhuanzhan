@@ -18,6 +18,8 @@ class GatewayService : Service() {
         const val NOTIF_ID = 1001
         const val ACTION_START = "start"
         const val ACTION_STOP = "stop"
+        @Volatile var isRunning = false
+            private set
 
         fun start(ctx: Context) {
             val intent = Intent(ctx, GatewayService::class.java).apply { action = ACTION_START }
@@ -45,6 +47,7 @@ class GatewayService : Service() {
             ACTION_STOP -> {
                 gateway?.stop()
                 gateway = null
+                isRunning = false
                 stopForeground(true)
                 stopSelf()
             }
@@ -58,6 +61,7 @@ class GatewayService : Service() {
         startForeground(NOTIF_ID, notification)
 
         if (gateway?.isRunning() == true) {
+            isRunning = true
             updateNotif("綦桐AI转站", "网关已运行 · 端口 $port")
             return
         }
@@ -69,6 +73,7 @@ class GatewayService : Service() {
             onRequestFailed = { error -> updateNotif("綦桐AI转站", "请求失败: ${error.take(60)}") }
         }
         if (gateway?.startServer() == true) {
+            isRunning = true
             updateNotif("綦桐AI转站", "网关运行中 · 端口 $port")
         } else {
             gateway = null

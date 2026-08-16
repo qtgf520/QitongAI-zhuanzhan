@@ -230,6 +230,11 @@ class GatewayServer(
                         .put("finish_reason", "stop")
                 )
             )
+            put("usage", JSONObject().apply {
+                put("prompt_tokens", 0)
+                put("completion_tokens", reply.length / 4)
+                put("total_tokens", reply.length / 4)
+            })
         }
         return jsonResponse(response.toString())
     }

@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.qtwl.YitongAIzhuanzhan.GatewayPrefs
-import android.os.Build
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {

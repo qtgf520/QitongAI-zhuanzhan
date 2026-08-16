@@ -1,5 +1,23 @@
 # 📋 更新日志
 
+## v1.0.3 (2026-08-16) — 正式版 🎉
+
+### 🔧 修复与优化
+- ✅ **网关状态栏显示真实运行状态** — 从 `GatewayService.isRunning` 实时读取，不再依赖配置值
+- ✅ **AppHider 开关同步** — 开关用 `remember` 可写状态，切换页面后保持同步
+- ✅ **网关响应增加 usage 字段** — 符合 OpenAI 完整响应格式
+- ✅ **修复 deprecated 图标警告** — 所有 ArrowBack/ArrowForward/Send 改用 AutoMirrored 版本
+- ✅ **清理未使用的 import** — BootReceiver 删除多余 Build 导入
+- ✅ **BotReceiver 依赖清理完成**
+- ✅ **编译零警告** — 所有 deprecated API 警告已消除
+
+### 🎨 界面
+- 状态栏网关状态实时反映运行状态
+- 底部导航栏全部使用 AutoMirrored 图标
+- 关于页 AppHider 开关实时同步
+
+---
+
 ## v1.0.3-4 (2026-08-08) — 真实站点烟雾测试 + Qwen/Kimi 适配
 
 ### 🧪 测试
@@ -142,6 +160,6 @@
 
 ---
 
-> **当前版本：** v1.0.3-4 (versionCode=39)
+> **当前版本：** v1.0.3 (versionCode=42)
 > **状态：** 正式版 🎉  
-> **发布日期：** 2026-08-05
+> **发布日期：** 2026-08-16

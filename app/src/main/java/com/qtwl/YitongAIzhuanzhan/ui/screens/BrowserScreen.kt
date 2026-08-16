@@ -12,6 +12,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -480,7 +483,7 @@ private fun GlassUrlBar(
                 )
                 Spacer(Modifier.width(6.dp))
                 IconButton(onClick = onGo, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Filled.ArrowForward, contentDescription = stringResource(R.string.go), tint = AppleBlue, modifier = Modifier.size(18.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = stringResource(R.string.go), tint = AppleBlue, modifier = Modifier.size(18.dp))
                 }
             } else {
                 Text(
@@ -537,8 +540,8 @@ private fun BottomNavigationBar(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                NavButton(Icons.Filled.ArrowBack, canGoBack, onBack, isDark, buttonSize, iconSize)
-                NavButton(Icons.Filled.ArrowForward, canGoForward, onForward, isDark, buttonSize, iconSize)
+                NavButton(Icons.AutoMirrored.Filled.ArrowBack, canGoBack, onBack, isDark, buttonSize, iconSize)
+                NavButton(Icons.AutoMirrored.Filled.ArrowForward, canGoForward, onForward, isDark, buttonSize, iconSize)
                 NavButton(
                     if (isLoading) Icons.Filled.Close else Icons.Filled.Refresh,
                     true,
@@ -559,7 +562,7 @@ private fun BottomNavigationBar(
                         )
                 )
                 NavButton(Icons.Outlined.Bookmarks, true, onBookmarks, isDark, buttonSize, iconSize)
-                NavButton(Icons.Filled.Send, true, onAiDialog, isDark, buttonSize, iconSize)
+                NavButton(Icons.AutoMirrored.Filled.Send, true, onAiDialog, isDark, buttonSize, iconSize)
                 NavButton(Icons.Filled.AccountTree, true, onPipeline, isDark, buttonSize, iconSize)
             }
         }
@@ -639,7 +642,7 @@ private fun AiSendDialog(
         confirmButton = {
             Button(onClick = onSend, enabled = message.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AppleBlue), shape = RoundedCornerShape(10.dp)) {
-                Icon(Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp)); Text(stringResource(R.string.send))
             }
         },
