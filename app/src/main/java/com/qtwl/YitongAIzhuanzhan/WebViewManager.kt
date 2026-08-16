@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
@@ -134,8 +135,11 @@ object WebViewManager {
 
                 @JavascriptInterface
                 fun onStatus(msg: String) {
-                    Handler(Looper.getMainLooper()).post {
-                        NotificationHelper.update(appContext, "綦桐AI转站", msg)
+                    Log.d("QitongCapture", msg)
+                    if (!msg.startsWith("CAPTURE_DIAG ")) {
+                        Handler(Looper.getMainLooper()).post {
+                            NotificationHelper.update(appContext, "綦桐AI转站", msg)
+                        }
                     }
                 }
             }, "Android")
